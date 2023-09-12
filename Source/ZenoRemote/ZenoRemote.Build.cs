@@ -73,7 +73,7 @@ public class ZenoRemote : ModuleRules
     
     protected string GenerateCppTargetFolder => Path.GetFullPath(Path.Combine(ModuleDirectory, "Private/Generated"));
     
-    protected string ProtoFilesPath => Path.GetFullPath(Path.Combine(GRpcResourcePath, "proto"));
+    protected string ProtoFilesPath => Path.GetFullPath(Path.Combine(GRpcResourcePath, "../zeno_proto"));
     
     protected string ExternalProtoFilesFolder => Path.GetFullPath(Path.Combine(ThirdPartyRoot, "protobuf/include"));
     
