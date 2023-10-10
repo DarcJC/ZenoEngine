@@ -22,9 +22,24 @@
 		},
 		{
 			"Name": "ZenoRemote",
+			"Type": "Editor",
+			"LoadingPhase": "None"
+		},
+		{
+			"Name": "ZenoEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "ZenoRuntime",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	],
-	"Plugins": []
+	"Plugins": [
+		{
+			"Name": "UObjectPlugin",
+			"Enabled": true
+		}
+	]
 }

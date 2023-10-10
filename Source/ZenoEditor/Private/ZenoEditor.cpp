@@ -1,0 +1,61 @@
+﻿#include "ZenoEditor.h"
+
+#include "ZenoEditorCommand.h"
+#include "UI/DetailPanel/ZenoDetailPanelService.h"
+#include "UI/Menu/ZenoEditorMenuExtender.h"
+#include "UI/Toolkit/ZenoLandscapeEditor.h"
+
+#define LOCTEXT_NAMESPACE "FZenoEditorModule"
+
+void FZenoEditorModule::StartupModule()
+{
+	if (!IsRunningCommandlet())
+	{
+		FZenoEditorCommand::Register();
+		FZenoEditorMenuExtender::Get().Register();
+		RegisterActorFactory();
+		RegisterDetailPanelCustomization();
+	}
+}
+
+void FZenoEditorModule::ShutdownModule()
+{
+	if (!IsRunningCommandlet())
+	{
+		// UnregisterDetailPanelCustomization();
+		FZenoEditorMenuExtender::Get().Unregister();
+	}
+}
+
+void FZenoEditorModule::RegisterActorFactory() const
+{
+}
+
+void FZenoEditorModule::RegisterDetailPanelCustomization()
+{
+	// Landscape editor
+	UZenoLandscapeEditor* Editor = NewObject<UZenoLandscapeEditor>();
+	LandscapeEditorGuard = MakeShared<FGCObjectScopeGuard>(Editor);
+	Editor->Register();
+	
+	FZenoDetailPanelServiceManager::Get().Register();
+}
+
+void FZenoEditorModule::UnregisterDetailPanelCustomization()
+{
+	FZenoDetailPanelServiceManager::Get().Unregister();
+
+	// Landscape editor
+	if (UZenoLandscapeEditor* Editor = const_cast<UZenoLandscapeEditor*>(Cast<UZenoLandscapeEditor>(LandscapeEditorGuard->Get())); IsValid(Editor))
+	{
+		// Editor->Unregister();
+	}
+	LandscapeEditorGuard.Reset();
+	
+}
+
+DEFINE_LOG_CATEGORY(ZenoEditor);
+
+IMPLEMENT_MODULE(FZenoEditorModule, ZenoEditor)
+
+#undef LOCTEXT_NAMESPACE
