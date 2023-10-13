@@ -141,12 +141,13 @@ void UZenoEditorLandscapeLibrary::SnapControlPointToGround(ULandscapeSplineContr
 
 	const FTransform LocalToWorld = SplinesComponent->GetComponentToWorld();
 	const FVector Start = LocalToWorld.TransformPosition(ControlPoint->Location);
-	const FVector End = Start + FVector(0, 0, -HALF_WORLD_MAX);
+	const FVector EndDown = Start + FVector(0, 0, -HALF_WORLD_MAX);
+	const FVector EndUp = Start + FVector(0, 0, HALF_WORLD_MAX);
 
 	FHitResult HitResult;
 	UWorld* World = SplinesComponent->GetWorld();
 	check(World);
-	if (World->LineTraceSingleByObjectType(HitResult, Start, End, FCollisionObjectQueryParams(ECC_WorldStatic), FCollisionQueryParams(NAME_None, FCollisionQueryParams::GetUnknownStatId(), true)))
+	if (World->LineTraceSingleByObjectType(HitResult, Start, EndDown, FCollisionObjectQueryParams(ECC_WorldStatic), FCollisionQueryParams(NAME_None, FCollisionQueryParams::GetUnknownStatId(), true)) || World->LineTraceSingleByObjectType(HitResult, Start, EndUp, FCollisionObjectQueryParams(ECC_WorldStatic), FCollisionQueryParams(NAME_None, FCollisionQueryParams::GetUnknownStatId(), true)))
 	{
 		ControlPoint->Location = LocalToWorld.InverseTransformPosition(HitResult.Location);
 		ControlPoint->UpdateSplinePoints();

@@ -49,6 +49,7 @@ void FZenoEssentialMenu::ExtendMenuBar(FMenuBarBuilder& Builder)
 
 void FZenoEssentialMenu::ExtendPullDownMenu(FMenuBuilder& Builder)
 {
+	Builder.AddMenuSeparator("Terrain");
 	Builder.AddMenuEntry(FZenoEditorCommand::Get().LandscapeSplineImport);
 }
 
@@ -154,7 +155,16 @@ void FZenoEssentialMenu::Action_ImportSplineData()
 			PointLocation = PointLocation * Scale;
 			NewControlPoint->Location = PointLocation;
 
-			UZenoEditorLandscapeLibrary::SnapControlPointToGround(NewControlPoint, false);
+			const double HalfWidth = FMath::RandRange(Settings->HalfWidthRange.X, Settings->HalfWidthRange.Y);
+			NewControlPoint->Width = HalfWidth;
+
+			NewControlPoint->bCastShadow = Settings->bCastShadow;
+			NewControlPoint->LayerName = Settings->LayerName;
+
+			if (Settings->bSnapToLandscape)
+			{
+				UZenoEditorLandscapeLibrary::SnapControlPointToGround(NewControlPoint, false);
+			}
 
 			// Control two control points
 			if (nullptr != LastControlPoint)
