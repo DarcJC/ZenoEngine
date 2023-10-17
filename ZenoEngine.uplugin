@@ -33,7 +33,7 @@
 		{
 			"Name": "ZenoRuntime",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostConfigInit"
 		}
 	],
 	"Plugins": [

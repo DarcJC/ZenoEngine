@@ -1,0 +1,31 @@
+﻿#include "/Engine/Private/Common.ush"
+
+struct FVertexShaderToGeometryShader
+{
+	float4 WPosition : POSITIONT;
+};
+
+struct FGeometryShaderToPixelShader {};
+
+float RandomNoise(float x, float y)
+{
+    return frac(sin(dot(float2(x, y), float2(12.9898, 78.233))) * 43758.5453);
+}
+
+//void MainVS(in float3 Position : ATTRIBUTE0, out FVertexShaderToGeometryShader Output)
+void MainVS(in float4 Position : ATTRIBUTE0, out float4 Output : SV_POSITION)
+{
+	//Output.WPosition = float4(0, 0, 0, 1.0);
+	Output = Position;
+}
+
+[maxvertexcount(3)]
+void MainGS(triangle FVertexShaderToGeometryShader Input[3], inout TriangleStream<FGeometryShaderToPixelShader> OutMesh)
+{
+}
+
+//void MainPS(in FVertexShaderToGeometryShader Input, out float4 OutColor : SV_Target0)
+void MainPS(out float4 OutColor : SV_Target0)
+{
+	OutColor = float4(1, 0, 0, 1);
+}

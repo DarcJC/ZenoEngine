@@ -1,4 +1,5 @@
-﻿using UnrealBuildTool;
+﻿using System.IO;
+using UnrealBuildTool;
 
 public class ZenoRuntime : ModuleRules
 {
@@ -10,6 +11,7 @@ public class ZenoRuntime : ModuleRules
             new string[]
             {
                 "Core",
+                "Engine",
             }
         );
 
@@ -21,7 +23,17 @@ public class ZenoRuntime : ModuleRules
                 "Slate",
                 "SlateCore",
                 "Landscape",
+                "Projects",
+                "RenderCore",
+                "Renderer",
+                "RHICore",
+                "RHI",
+                "Landscape",
             }
         );
+        
+		// Fix for a private postprocessing header inside ViewExtension.
+        var enginePath = Path.GetFullPath(Target.RelativeEnginePath);
+        PublicIncludePaths.Add(enginePath + "Source/Runtime/Renderer/Private");
     }
 }
