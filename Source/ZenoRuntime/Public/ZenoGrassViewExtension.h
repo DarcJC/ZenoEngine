@@ -5,7 +5,11 @@
 
 class FStaticMeshBatch;
 BEGIN_SHADER_PARAMETER_STRUCT(FGrassPassParameters, ZENORUNTIME_API)
-	SHADER_PARAMETER(float, Test)
+	SHADER_PARAMETER_STRUCT_INCLUDE(FViewShaderParameters, View)
+
+	SHADER_PARAMETER(FMatrix44f, ModelMatrix)
+	SHADER_PARAMETER(FMatrix44f, ViewMatrix)
+	SHADER_PARAMETER(FMatrix44f, ProjectionMatrix)
 
 	RENDER_TARGET_BINDING_SLOTS()
 END_SHADER_PARAMETER_STRUCT()
@@ -51,6 +55,7 @@ protected:
 
 private:
 	TArray<TSoftObjectPtr<UPrimitiveComponent>> GroundPrimitives;
-	
 	FScene* Scene = nullptr;
+
+	TArray<FPrimitiveSceneInfo*> CurrentFrameSceneInfos;
 };
