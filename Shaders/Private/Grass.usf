@@ -48,11 +48,11 @@ void MainGS(triangle float4 Input[3] : SV_POSITION, inout TriangleStream<FGeomet
 	const float4 Pos = Input[0];
 
 	FGeometryShaderOutput Result;
-	Result.Position = LocalToClip(Pos + float4(-0.05, 0, 0, 1) * GrassCardScale);
+	Result.Position = LocalToClip(Pos + float4(float3(-0.05, 0, 0) * GrassCardScale, 1));
 	OutMesh.Append(Result);
-	Result.Position = LocalToClip(Pos + float4(0.05, 0, 0, 1) * GrassCardScale);
+	Result.Position = LocalToClip(Pos + float4(float3(0.05, 0, 0) * GrassCardScale, 1));
 	OutMesh.Append(Result);
-	Result.Position = LocalToClip(Pos + float4(0, 0, 5, 1) * GrassCardScale);
+	Result.Position = LocalToClip(Pos + float4(float3(0, 0, 5) * GrassCardScale, 1));
 	OutMesh.Append(Result);
 	OutMesh.RestartStrip();
 }
