@@ -1,31 +1,64 @@
 ﻿#include "/Engine/Private/Common.ush"
 
+float4x4 ModelMatrix;
+float4x4 ViewMatrix;
+float4x4 ProjectionMatrix;
+
+float GrassCardScale;
+
 struct FVertexShaderToGeometryShader
 {
 	float4 WPosition : POSITIONT;
 };
 
-struct FGeometryShaderToPixelShader {};
+struct FGeometryShaderOutput
+{
+	float4 Position : SV_POSITION;
+};
 
 float RandomNoise(float x, float y)
 {
     return frac(sin(dot(float2(x, y), float2(12.9898, 78.233))) * 43758.5453);
 }
 
-//void MainVS(in float3 Position : ATTRIBUTE0, out FVertexShaderToGeometryShader Output)
-void MainVS(in float4 Position : ATTRIBUTE0, out float4 Output : SV_POSITION)
+float4 WorldToClip(float4 WorldLocation)
+{
+	return mul(mul(WorldLocation, ViewMatrix), ProjectionMatrix);
+}
+
+float4 LocalToClip(float4 LocalPosition)
+{
+	return WorldToClip(mul(LocalPosition, ModelMatrix));
+}
+
+//void MainVS(in float4 Position : ATTRIBUTE0, out FGeometryShaderOutput Output)
+void MainVS(in float4 Position : ATTRIBUTE0, out float4 Output : SV_POSITION, out float4 ClipLocation : POSITIONT)
 {
 	//Output.WPosition = float4(0, 0, 0, 1.0);
+	float4 WorldPosition = mul(Position, ModelMatrix);
+	float4 CameraPosition = mul(WorldPosition, ViewMatrix);
+	float4 ClipPosition = mul(CameraPosition, ProjectionMatrix);
 	Output = Position;
+	ClipLocation = ClipPosition;
 }
 
 [maxvertexcount(3)]
-void MainGS(triangle FVertexShaderToGeometryShader Input[3], inout TriangleStream<FGeometryShaderToPixelShader> OutMesh)
+void MainGS(triangle float4 Input[3] : SV_POSITION, inout TriangleStream<FGeometryShaderOutput> OutMesh)
 {
+	const float4 Pos = Input[0];
+
+	FGeometryShaderOutput Result;
+	Result.Position = LocalToClip(Pos + float4(-0.05, 0, 0, 1) * GrassCardScale);
+	OutMesh.Append(Result);
+	Result.Position = LocalToClip(Pos + float4(0.05, 0, 0, 1) * GrassCardScale);
+	OutMesh.Append(Result);
+	Result.Position = LocalToClip(Pos + float4(0, 0, 5, 1) * GrassCardScale);
+	OutMesh.Append(Result);
+	OutMesh.RestartStrip();
 }
 
-//void MainPS(in FVertexShaderToGeometryShader Input, out float4 OutColor : SV_Target0)
 void MainPS(out float4 OutColor : SV_Target0)
+//void MainPS(out float4 OutColor : SV_Target0)
 {
 	OutColor = float4(1, 0, 0, 1);
 }

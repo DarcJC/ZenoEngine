@@ -3,7 +3,14 @@
 #include "PrimitiveSceneInfo.h"
 #include "ScenePrivate.h"
 #include "SceneRendering.h"
-#include "ZenoMeshElementCollector.h"
+
+static TAutoConsoleVariable<float> CVarGrassCardScale(
+	TEXT("r.Zeno.GrassCardScale"),
+	50.f,
+	TEXT("Allow to set the size of the grass card.\n")
+	TEXT("This option will not effect the performence but might remove later.\n")
+	TEXT("Default value: 50.0"),
+	ECVF_Scalability | ECVF_RenderThreadSafe);
 
 FZenoGrassViewExtension::FZenoGrassViewExtension(const FAutoRegister& AutoReg, UWorld* InWorld):
 	FWorldSceneViewExtension(AutoReg, InWorld)
@@ -66,6 +73,7 @@ void FZenoGrassViewExtension::PostRenderBasePassDeferred_RenderThread(FRDGBuilde
 	PassParameters->View.InstancedView = ViewInfo->GetInstancedViewUniformBuffer();
 	PassParameters->ViewMatrix = FMatrix44f(ViewInfo->ViewMatrices.GetViewMatrix());
 	PassParameters->ProjectionMatrix = FMatrix44f(ViewInfo->ViewMatrices.GetProjectionMatrix());
+	PassParameters->GrassCardScale = CVarGrassCardScale.GetValueOnRenderThread();
 
 	GraphBuilder.AddPass(RDG_EVENT_NAME("Grass"), PassParameters, ERDGPassFlags::Raster, [this, PassParameters] (FRHICommandList& RHICmdList) 
 	{
