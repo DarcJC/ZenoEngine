@@ -10,22 +10,22 @@ void FZenoEngineModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	using namespace zpp::bits::literals;
-
-	auto Handler = [] (auto Result)
+	TZenoSimplePromise<FZenoRPCContext> ContextPromise = REQUEST_REMOTE_ZENO_GENERIC(roads::service::rpc, "TestFunc"_sha256_int, 123);
+	ContextPromise.Then([] (FZenoRPCContext& Context)
 	{
-		if (zpp::bits::success(Result))
-		{
-			int32 i = Result.or_throw();
-			UE_LOG(LogTemp, Warning, TEXT("WTF %d"), i);
-		}
-	};
-	REQUEST_REMOTE_ZENO_GENERIC(roads::service::rpc, "TestFunc"_sha256_int, Handler, 123);
+		GET_RPC_CLIENT_INSTANCE(Context.Buffer);
+		int32 i = Client.response<"TestFunc"_sha256_int>().or_throw();
+		UE_LOG(LogTemp, Warning, TEXT("WTF %d"), i);
+	});
 }
 
 void FZenoEngineModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+}
+
+TSharedRef<TPromise<FZenoRPCContext>> FZenoEngineModule::CreateContextPromise()
+{
+	return MakeShared<TPromise<FZenoRPCContext>>();
 }
 
 void FZenoEngineModule::AsyncCallZenoApi(const TArray<uint8>& Data, const FHttpRequestCompleteDelegate& InCallback)
