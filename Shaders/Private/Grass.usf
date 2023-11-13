@@ -3,6 +3,7 @@
 float4x4 ModelMatrix;
 float4x4 ViewMatrix;
 float4x4 ProjectionMatrix;
+float4x4 ViewProjectionMatrix;
 
 float GrassCardScale;
 
@@ -28,37 +29,50 @@ float4 WorldToClip(float4 WorldLocation)
 
 float4 LocalToClip(float4 LocalPosition)
 {
-	return WorldToClip(mul(LocalPosition, ModelMatrix));
+	return mul(mul(LocalPosition, ModelMatrix), ViewProjectionMatrix);
 }
 
 //void MainVS(in float4 Position : ATTRIBUTE0, out FGeometryShaderOutput Output)
-void MainVS(in float4 Position : ATTRIBUTE0, out float4 Output : SV_POSITION, out float4 ClipLocation : POSITIONT)
+void MainVS(in float4 Position : ATTRIBUTE0, out float4 Output : SV_POSITION)
 {
 	//Output.WPosition = float4(0, 0, 0, 1.0);
 	float4 WorldPosition = mul(Position, ModelMatrix);
 	float4 CameraPosition = mul(WorldPosition, ViewMatrix);
 	float4 ClipPosition = mul(CameraPosition, ProjectionMatrix);
 	Output = Position;
-	ClipLocation = ClipPosition;
 }
 
-[maxvertexcount(3)]
+[maxvertexcount(12)]
 void MainGS(triangle float4 Input[3] : SV_POSITION, inout TriangleStream<FGeometryShaderOutput> OutMesh)
 {
-	const float4 Pos = Input[0];
+	FGeometryShaderOutput Output;
+	
+    // Calculate the midpoints of each edge
+    float4 MidPoints[3];
+    MidPoints[0] = (Input[0] + Input[1]) / 2.0; // midpoint of edge 0-1
+    MidPoints[1] = (Input[1] + Input[2]) / 2.0; // midpoint of edge 1-2
+    MidPoints[2] = (Input[0] + Input[2]) / 2.0; // midpoint of edge 0-2
 
-	FGeometryShaderOutput Result;
-	Result.Position = LocalToClip(Pos + float4(float3(-0.05, 0, 0) * GrassCardScale, 1));
-	OutMesh.Append(Result);
-	Result.Position = LocalToClip(Pos + float4(float3(0.05, 0, 0) * GrassCardScale, 1));
-	OutMesh.Append(Result);
-	Result.Position = LocalToClip(Pos + float4(float3(0, 0, 5) * GrassCardScale, 1));
-	OutMesh.Append(Result);
-	OutMesh.RestartStrip();
+	int Indices[12] = { 0, 0, 2, 0, 1, 1, 2, 2, 0, 1, 2, 0 };
+
+	[UNROLL]
+	for (int i = 0; i < 4; ++i) // For each of the 4 triangles
+	{
+		[UNROLL]
+		for (int j = 0; j < 3; ++j) // For each vertex of the triangle
+		{
+			// The position of each vertex is either an original or a midpoint
+			float4 Pos = (j > 0) ? MidPoints[Indices[i * 3 + j]] : Input[Indices[i * 3 + j]];
+			Output.Position = LocalToClip(Pos);
+			OutMesh.Append(Output);
+		}
+
+		OutMesh.RestartStrip();
+	}
 }
 
-void MainPS(out float4 OutColor : SV_Target0)
-//void MainPS(out float4 OutColor : SV_Target0)
+void MainPS(out float4 OutColor : SV_Target0, out float4 OutNormal : SV_Target1)
 {
 	OutColor = float4(1, 0, 0, 1);
+	OutNormal = float4(0, 0, 1, 1);
 }

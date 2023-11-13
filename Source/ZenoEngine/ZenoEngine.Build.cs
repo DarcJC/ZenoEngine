@@ -1,5 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System;
+using System.IO;
 using UnrealBuildTool;
 
 public class ZenoEngine : ModuleRules
@@ -12,14 +14,15 @@ public class ZenoEngine : ModuleRules
 			new string[] {
 				// ... add public include paths required here ...
 			}
-			);
+		);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
+				Path.Join(ModuleDirectory, "ThirdParty"),
 			}
-			);
+		);
 			
 		
 		PublicDependencyModuleNames.AddRange(
@@ -28,7 +31,7 @@ public class ZenoEngine : ModuleRules
 				"Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
-			);
+		);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -38,9 +41,10 @@ public class ZenoEngine : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"HTTP",
 				// ... add private dependencies that you statically link with here ...	
 			}
-			);
+		);
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(
@@ -48,6 +52,10 @@ public class ZenoEngine : ModuleRules
 			{
 				// ... add any modules that your module loads dynamically here ...
 			}
-			);
+		);
+
+		CppStandard = CppStandardVersion.Cpp20;
+
+		bWarningsAsErrors = false;
 	}
 }

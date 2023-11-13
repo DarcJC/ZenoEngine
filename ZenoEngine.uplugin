@@ -21,11 +21,6 @@
 			"LoadingPhase": "PostConfigInit"
 		},
 		{
-			"Name": "ZenoRemote",
-			"Type": "Editor",
-			"LoadingPhase": "None"
-		},
-		{
 			"Name": "ZenoEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"

@@ -36,6 +36,12 @@ void FZenoGrassViewExtension::SetupView(FSceneViewFamily& InViewFamily, FSceneVi
 		if (UPrimitiveComponent* PrimitiveComponent = PrimitiveComponentPtr.Get(); PrimitiveComponent != nullptr && PrimitiveComponent->bRenderInMainPass)
 		{
 			FPrimitiveSceneProxy* SceneProxy = PrimitiveComponent->SceneProxy;
+
+			if (nullptr == SceneProxy)
+			{
+				continue;
+			}
+			
 			FPrimitiveSceneInfo* PrimitiveSceneInfo = SceneProxy->GetScene().GetPrimitiveSceneInfo(SceneProxy->GetPrimitiveComponentId());
 			if (PrimitiveSceneInfo != nullptr)
 				CurrentFrameSceneInfos.Add(PrimitiveSceneInfo);
@@ -60,22 +66,23 @@ void FZenoGrassViewExtension::PostRenderBasePassDeferred_RenderThread(FRDGBuilde
                                                                       TRDGUniformBufferRef<
 	                                                                      FSceneTextureUniformParameters> SceneTextures)
 {
-	if (Scene == nullptr || CurrentFrameSceneInfos.IsEmpty() || !InView.bIsViewInfo)
+	if (Scene == nullptr || CurrentFrameSceneInfos.IsEmpty() || !InView.bIsViewInfo || !InView.bIsGameView)
 	{
 		return;
 	}
-
-	FViewInfo* ViewInfo = static_cast<FViewInfo*>(&InView);
 	
+	FViewInfo* ViewInfo = static_cast<FViewInfo*>(&InView);
+
 	FGrassPassParameters* PassParameters = GraphBuilder.AllocParameters<FGrassPassParameters>();
 	PassParameters->RenderTargets = RenderTargets;
 	PassParameters->View.View = ViewInfo->ViewUniformBuffer;
 	PassParameters->View.InstancedView = ViewInfo->GetInstancedViewUniformBuffer();
 	PassParameters->ViewMatrix = FMatrix44f(ViewInfo->ViewMatrices.GetViewMatrix());
 	PassParameters->ProjectionMatrix = FMatrix44f(ViewInfo->ViewMatrices.GetProjectionMatrix());
+	PassParameters->ViewProjectionMatrix = FMatrix44f(ViewInfo->ViewMatrices.GetViewProjectionMatrix());
 	PassParameters->GrassCardScale = CVarGrassCardScale.GetValueOnRenderThread();
-
-	GraphBuilder.AddPass(RDG_EVENT_NAME("Grass"), PassParameters, ERDGPassFlags::Raster, [this, PassParameters] (FRHICommandList& RHICmdList) 
+	
+	GraphBuilder.AddPass(RDG_EVENT_NAME("Grass"), PassParameters, ERDGPassFlags::Raster, [this, PassParameters, ViewInfo] (FRHICommandList& RHICmdList) 
 	{
 		const FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(GMaxRHIFeatureLevel);
 		TShaderMapRef<FGrassShaderVS> VertexShader(GlobalShaderMap);
@@ -84,7 +91,7 @@ void FZenoGrassViewExtension::PostRenderBasePassDeferred_RenderThread(FRDGBuilde
 		
 		FGraphicsPipelineStateInitializer GraphicsPSOInit;
 		RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
-		GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
+		GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<true, CF_DepthNearOrEqual>::GetRHI();
 		GraphicsPSOInit.BlendState = TStaticBlendState<CW_RGBA, BO_Add, BF_One, BF_Zero, BO_Add, BF_One, BF_Zero>::GetRHI();
 		GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
 		GraphicsPSOInit.PrimitiveType = PT_TriangleList;
@@ -96,10 +103,15 @@ void FZenoGrassViewExtension::PostRenderBasePassDeferred_RenderThread(FRDGBuilde
 
 		for (FPrimitiveSceneInfo* SceneInfo : CurrentFrameSceneInfos)
 		{
+			if (!SceneInfo->bDrawInGame) continue;
 			PassParameters->ModelMatrix = FMatrix44f(SceneInfo->Proxy->GetLocalToWorld());
 			for (FStaticMeshBatch& StaticMesh : SceneInfo->StaticMeshes)
 			{
 				GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = StaticMesh.VertexFactory->GetDeclaration(EVertexInputStreamType::PositionOnly);
+				if (StaticMesh.bWireframe || ViewInfo->Family->ViewMode == VMI_BrushWireframe)
+				{
+					GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Wireframe>::GetRHI();
+				}
 				SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
 				SetShaderParameters(RHICmdList, VertexShader, VertexShader.GetVertexShader(), *PassParameters);
 				SetShaderParameters(RHICmdList, GeometryShader, GeometryShader.GetPixelShader(), *PassParameters);
@@ -131,10 +143,6 @@ void FZenoGrassViewExtension::PostRenderBasePassDeferred_RenderThread(FRDGBuilde
 
 void FZenoGrassViewExtension::CleanGroundPrimitives()
 {
-	GroundPrimitives.RemoveAll([](const TSoftObjectPtr<UPrimitiveComponent>& Item)
-	{
-		return !Item.IsValid();
-	});
 }
 
 IMPLEMENT_GLOBAL_SHADER(FGrassShaderVS, "/ZenoEngine/Private/Grass.usf", "MainVS", SF_Vertex);

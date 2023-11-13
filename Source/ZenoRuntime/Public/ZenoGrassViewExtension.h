@@ -10,6 +10,7 @@ BEGIN_SHADER_PARAMETER_STRUCT(FGrassPassParameters, ZENORUNTIME_API)
 	SHADER_PARAMETER(FMatrix44f, ModelMatrix)
 	SHADER_PARAMETER(FMatrix44f, ViewMatrix)
 	SHADER_PARAMETER(FMatrix44f, ProjectionMatrix)
+	SHADER_PARAMETER(FMatrix44f, ViewProjectionMatrix)
 
 	SHADER_PARAMETER(float, GrassCardScale)
 
@@ -56,7 +57,7 @@ protected:
 	void CleanGroundPrimitives();
 
 private:
-	TArray<TSoftObjectPtr<UPrimitiveComponent>> GroundPrimitives;
+	TSet<TSoftObjectPtr<UPrimitiveComponent>> GroundPrimitives;
 	FScene* Scene = nullptr;
 
 	TArray<FPrimitiveSceneInfo*> CurrentFrameSceneInfos;
