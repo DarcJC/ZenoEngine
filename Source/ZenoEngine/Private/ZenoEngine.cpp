@@ -3,6 +3,7 @@
 #include "ZenoEngine.h"
 
 #include "HttpModule.h"
+#include "JsonObjectConverter.h"
 
 #define LOCTEXT_NAMESPACE "FZenoEngineModule"
 
@@ -14,8 +15,11 @@ void FZenoEngineModule::StartupModule()
 	ContextPromise.Then([] (FZenoRPCContext& Context)
 	{
 		GET_RPC_CLIENT_INSTANCE(Context.Buffer);
-		int32 i = Client.response<"TestFunc"_sha256_int>().or_throw();
-		UE_LOG(LogTemp, Warning, TEXT("WTF %d"), i);
+		FZenoTerrainData i = Client.response<"TestFunc"_sha256_int>().or_throw();
+		UE_LOG(LogTemp, Warning, TEXT("WTF %lld"), i.Data.InternalData.size());
+		FString JSON;
+		FJsonObjectConverter::UStructToJsonObjectString<FZenoTerrainData>(i, JSON);
+		UE_LOG(LogTemp, Warning, TEXT("WTF %s"), *JSON);
 	});
 }
 

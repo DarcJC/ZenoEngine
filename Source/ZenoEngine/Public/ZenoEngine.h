@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "shared_server.h"
+#include "ZenoSharedServer.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Modules/ModuleManager.h"
@@ -77,7 +77,6 @@ struct TZenoSimplePromise
 private:
 	mutable TSharedRef<bool> bIsFullFiled = MakeShared<bool>(false);
 	mutable TSharedPtr<ResultType> Result;
-
 	mutable TSharedRef<TQueue<FPendingFunctionType>> InternalQueue = MakeShared<TQueue<FPendingFunctionType>>();
 };
 
